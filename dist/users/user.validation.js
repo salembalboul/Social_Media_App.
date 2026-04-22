@@ -1,5 +1,6 @@
 import z from "zod";
 import { GenderType } from "../DB/model/user.model.js";
+import { Types } from "mongoose";
 export var flagType;
 (function (flagType) {
     flagType["all"] = "all";
@@ -58,5 +59,15 @@ export const resetPasswordSchema = {
         return data.password === data.cPassword;
     }, { error: "password not match",
         path: ["cPassword"]
+    })
+};
+export const freezeAccountSchema = {
+    params: z.strictObject({
+        userId: z.string(),
+    }).required().refine((data) => {
+        return data?.userId ? Types.ObjectId.isValid(data.userId) : true;
+    }, {
+        error: "user id is required",
+        path: ["userId"]
     })
 };

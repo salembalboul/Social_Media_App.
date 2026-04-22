@@ -11,3 +11,4 @@ const RevokeTokenSchema = new mongoose.Schema({
 });
 const revokeTokenModel = mongoose.model("RevokeToken", RevokeTokenSchema);
 export default revokeTokenModel;
+//# sourceMappingURL=revokeToken.model.js.map

@@ -5,8 +5,6 @@ import UserModel from '../DB/model/user.model.js';
 import { RevokeTokenRebository } from '../DB/rebositories/revokeToken.rebo.js';
 import revokeTokenModel from '../DB/model/revokeToken.model.js';
 
-
-
 export enum TokenType{
   access = "access",
   refresh = "refresh"  
@@ -17,7 +15,6 @@ export const generateToken = async({payload , signature , options}:
     {payload:object , signature:string , options?:jwt.SignOptions}) : Promise<string> => {
 
 return jwt.sign(payload, signature,options)
-
 };
 
 //     ============verifyToken==============
@@ -30,14 +27,14 @@ export const verifyToken = async({token,signature}: {token:string,signature:stri
 const _userMoel= new UserRebository(UserModel)
 const _revokeToken = new RevokeTokenRebository(revokeTokenModel)
 
-//     ============getSignature==============
-export const getSignature= async(tokenType:TokenType,prefix:string) => {
+//============getSignature==============
+export const getSignature= async(tokenType:TokenType=TokenType.access,prefix:string) => {
   
 if(tokenType === TokenType.access){
    if(prefix ===process.env.BEARER_USER){
       return process.env.TOKEN_SIGNATURE ||""}
 
-else if(prefix === process.env.BERARER_ADMIN){
+else if(prefix === process.env.BEARER_ADMIN){
   return process.env.ADMIN_TOKEN_SIGNATURE ||""}
 
 else{
@@ -48,7 +45,7 @@ else if(tokenType === TokenType.refresh){
  if(prefix ===process.env.BEARER_USER){
       return process.env.REFRESH_TOKEN_SIGNATURE ||""}
 
-else if(prefix === process.env.BERARER_ADMIN){
+else if(prefix === process.env.BEARER_ADMIN){
   return process.env.ADMIN_REFRESH_TOKEN_SIGNATURE ||""}
 
 else{
@@ -58,15 +55,15 @@ else{
   return null
 }
 
-//     ============decodedTokenAndFetchUser==============
-export const decodedTokenAndFetchUser = async(token:string,signature:string) => {
+//============decodedTokenAndFetchUser==============
+export const decodedTokenAndFetchUser = async(token:string,signature:string,) => {
 
   const decoded = await verifyToken({ token, signature });
 
   if (!decoded) {
-    throw new appError("invalid token",400 ); }
+    throw new appError("invalid token",400 ) }
 
-  const user = await _userMoel.findOne({ email: decoded.email })
+  const user = await _userMoel.findOne({ email: decoded.email,paranoid:false})
   if (!user) {
     throw new appError("user is not exist",400 );
   }

@@ -17,12 +17,12 @@ export const verifyToken = async ({ token, signature }) => {
 };
 const _userMoel = new UserRebository(UserModel);
 const _revokeToken = new RevokeTokenRebository(revokeTokenModel);
-export const getSignature = async (tokenType, prefix) => {
+export const getSignature = async (tokenType = TokenType.access, prefix) => {
     if (tokenType === TokenType.access) {
         if (prefix === process.env.BEARER_USER) {
             return process.env.TOKEN_SIGNATURE || "";
         }
-        else if (prefix === process.env.BERARER_ADMIN) {
+        else if (prefix === process.env.BEARER_ADMIN) {
             return process.env.ADMIN_TOKEN_SIGNATURE || "";
         }
         else {
@@ -33,7 +33,7 @@ export const getSignature = async (tokenType, prefix) => {
         if (prefix === process.env.BEARER_USER) {
             return process.env.REFRESH_TOKEN_SIGNATURE || "";
         }
-        else if (prefix === process.env.BERARER_ADMIN) {
+        else if (prefix === process.env.BEARER_ADMIN) {
             return process.env.ADMIN_REFRESH_TOKEN_SIGNATURE || "";
         }
         else {
@@ -47,7 +47,7 @@ export const decodedTokenAndFetchUser = async (token, signature) => {
     if (!decoded) {
         throw new appError("invalid token", 400);
     }
-    const user = await _userMoel.findOne({ email: decoded.email });
+    const user = await _userMoel.findOne({ email: decoded.email, paranoid: false });
     if (!user) {
         throw new appError("user is not exist", 400);
     }
@@ -62,3 +62,4 @@ export const decodedTokenAndFetchUser = async (token, signature) => {
     }
     return { decoded, user };
 };
+//# sourceMappingURL=token.js.map

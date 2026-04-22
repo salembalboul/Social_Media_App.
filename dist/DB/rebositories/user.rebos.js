@@ -1,10 +1,9 @@
-import UserModel from "../model/user.model.js";
 import DbRebository from "./db.rebos.js";
 import { appError } from "../../utils/classError.js";
 export class UserRebository extends DbRebository {
     model;
     constructor(model) {
-        super(UserModel);
+        super(model);
         this.model = model;
     }
     async createOne(data) {
@@ -15,3 +14,4 @@ export class UserRebository extends DbRebository {
         return user;
     }
 }
+//# sourceMappingURL=user.rebos.js.map

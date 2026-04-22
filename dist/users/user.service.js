@@ -167,12 +167,53 @@ export class UserService {
     };
     uploadImage = async (req, res, next) => {
         const { originalname, contentType } = req.body;
-        const url = await createUploadPresignedUrl({
+        const { url, Key } = await createUploadPresignedUrl({
             originalname,
             contentType,
             path: `users/${req.user?._id}`
         });
-        return res.status(200).send({ message: "success", url });
+        const user = await this._userModel.findOneAndUpdate({ _id: req.user?._id }, { profileImage: Key,
+            tempProfileImage: req.user?.profileImage
+        });
+        if (!user) {
+            throw new appError("user not found", 404);
+        }
+        eventEmitter.emit("uploadProfileImage", { userId: req.user?._id, oldKey: req.user?.profileImage, Key, expiresIn: 60 });
+        return res.status(200).send({ message: "success", user, url });
+    };
+    freezeAccount = async (req, res, next) => {
+        const { userId } = req.params;
+        if (userId && req.user?.role !== RoleType.admin) {
+            throw new appError("unauthorized", 401);
+        }
+        const user = await this._userModel.findOneAndUpdate({ _id: userId || req.user?._id, deletedAt: { $exists: false } }, { deletedAt: new Date(),
+            deletedBy: req.user?._id,
+            changeCredentials: new Date() });
+        if (!user) {
+            throw new appError("user is not found", 404);
+        }
+        return res.status(200).send({ message: "success freeze account" });
+    };
+    restoreAccount = async (req, res, next) => {
+        const { userId } = req.params;
+        const user = await this._userModel.findOneAndUpdate({
+            _id: userId,
+            deletedAt: { $exists: true, $ne: null, $type: "date" },
+            $and: [
+                { deletedBy: { $ne: userId } },
+                { deletedBy: { $ne: null } }
+            ]
+        }, { $unset: { deletedAt: "", deletedBy: "" },
+            $set: {
+                restoredAt: new Date(),
+                restoredBy: req.user?._id,
+                changeCredentials: new Date(),
+            }
+        }, { new: true });
+        if (!user) {
+            throw new appError("user not found or not deleted or deleted by you", 404);
+        }
+        return res.status(200).send({ message: "success restore account", user });
     };
 }
 export default new UserService();

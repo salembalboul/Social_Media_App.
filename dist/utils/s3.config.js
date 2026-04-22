@@ -1,4 +1,4 @@
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, DeleteObjectsCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { storeTypeEnum } from "../middleware/multer.cloud.js";
 import { createReadStream } from 'fs';
 import { appError } from "./classError.js";
@@ -65,6 +65,47 @@ export const createUploadPresignedUrl = async ({ Bucket = process.env.AWS_BUCKET
     return { url, Key };
 };
 export const getFile = async ({ Bucket = process.env.AWS_BUCKET_NAME, Key, }) => {
-    const command = new GetObjectCommand({ Bucket, Key, });
+    const command = new GetObjectCommand({ Bucket, Key });
     return await s3client().send(command);
 };
+export const createGetPresignedUrl = async ({ Bucket = process.env.AWS_BUCKET_NAME, Key, expiresIn = 60, downloadName }) => {
+    const command = new GetObjectCommand({
+        Bucket,
+        Key,
+        ResponseContentDisposition: downloadName ? `attachment; filename="${downloadName}"` : undefined,
+    });
+    const url = await getSignedUrl(s3client(), command, { expiresIn });
+    return url;
+};
+export const deleteFile = async ({ Bucket = process.env.AWS_BUCKET_NAME, Key, }) => {
+    const command = new DeleteObjectCommand({
+        Bucket,
+        Key,
+    });
+    return await s3client().send(command);
+};
+export const deleteFiles = async ({ Bucket = process.env.AWS_BUCKET_NAME, urls, Quiet = false, }) => {
+    const command = new DeleteObjectsCommand({
+        Bucket,
+        Delete: {
+            Objects: urls.map(url => ({ Key: url })),
+            Quiet,
+        },
+    });
+    return await s3client().send(command);
+};
+export const listFiles = async ({ Bucket = process.env.AWS_BUCKET_NAME, path, }) => {
+    const command = new ListObjectsV2Command({
+        Bucket,
+        Prefix: `${process.env.APPLICATION_NAME}/${path}`,
+    });
+    return await s3client().send(command);
+};
+export const deleteFolderByPrefix = async ({ Bucket = process.env.AWS_BUCKET_NAME, Quiet = false, path, }) => {
+    const result = await listFiles({ path });
+    const keysToDelete = result.Contents?.map((obj) => {
+        return obj.Key;
+    });
+    return await deleteFiles({ urls: keysToDelete, Quiet });
+};
+//# sourceMappingURL=s3.config.js.map

@@ -6,3 +6,4 @@ export class RevokeTokenRebository extends DbRebository {
         this.model = model;
     }
 }
+//# sourceMappingURL=revokeToken.rebo.js.map

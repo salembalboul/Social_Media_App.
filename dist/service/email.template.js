@@ -84,3 +84,4 @@ export const emailTemplate = (otp, title) => {
                 </body>
                 </html>`;
 };
+//# sourceMappingURL=email.template.js.map

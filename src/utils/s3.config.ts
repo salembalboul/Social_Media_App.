@@ -1,4 +1,4 @@
-import { GetObjectCommand, GetObjectCommandOutput, ObjectCannedACL, PutObjectCommand, S3Client} from "@aws-sdk/client-s3"
+import { DeleteObjectCommand, DeleteObjectCommandOutput, DeleteObjectsCommand, DeleteObjectsCommandOutput, GetObjectCommand, GetObjectCommandOutput, ListObjectsV2Command, ObjectCannedACL, PutObjectCommand, S3Client} from "@aws-sdk/client-s3"
 import { storeTypeEnum } from "../middleware/multer.cloud.js";
 import { createReadStream } from 'fs';
 import { appError } from "./classError.js";
@@ -143,6 +143,102 @@ export const getFile = async ({
   Key: string;
 }): Promise<GetObjectCommandOutput> => {
 
-  const command = new GetObjectCommand( { Bucket, Key,} );
+  const command = new GetObjectCommand( { Bucket, Key } );
   return await s3client().send(command);
+};
+
+//=============createGetPresignedUrl=============
+export const createGetPresignedUrl = async ({
+  Bucket = process.env.AWS_BUCKET_NAME as string,
+  Key,
+  expiresIn = 60,
+  downloadName
+}: {
+  Bucket?: string;
+  Key: string;
+  expiresIn?: number;
+  downloadName?: string | undefined;
+}) => {
+  const command = new GetObjectCommand({
+    Bucket,
+    Key,
+    ResponseContentDisposition: downloadName ? `attachment; filename="${downloadName}"` : undefined,
+  });
+  const url = await getSignedUrl(s3client(), command, { expiresIn }); 
+  return url;
+};
+
+//=============deleteFile=============
+export const deleteFile = async ({
+  Bucket = process.env.AWS_BUCKET_NAME as string,
+  Key,
+}: {
+  Bucket?: string;
+  Key: string;
+}): Promise<DeleteObjectCommandOutput> => {
+  const command = new DeleteObjectCommand({
+    Bucket,
+    Key,
+  });
+  return await s3client().send(command);
+};
+
+//=============deleteFiles=============
+export const deleteFiles = async ({
+  Bucket = process.env.AWS_BUCKET_NAME!,
+  urls,
+  Quiet = false,
+}: {
+  Bucket?: string;
+  urls: string[];
+  Quiet?: boolean;
+}): Promise<DeleteObjectsCommandOutput> => {
+
+  // const mappedKeysToDelete: { Key: string }[] = 
+  
+
+  const command = new DeleteObjectsCommand({
+    Bucket,
+    Delete: {
+      Objects: urls.map(url => ({Key:url})),
+      Quiet,
+    },
+  });
+  return await s3client().send(command);
+  
+};
+
+//=============listFiles=============
+export const listFiles = async ({
+  Bucket = process.env.AWS_BUCKET_NAME as string,
+  path,
+}: {
+  Bucket?: string;
+  path: string;
+}) => {
+  const command = new ListObjectsV2Command({
+    Bucket,
+    Prefix: `${process.env.APPLICATION_NAME}/${path}`,
+  });
+
+    return await s3client().send(command);
+ 
+};
+
+//=============deleteFolderByPrefix=============
+export const deleteFolderByPrefix = async ({
+  Bucket = process.env.AWS_BUCKET_NAME as string,
+  Quiet = false,
+  path,
+}: {
+  Bucket?: string;
+  Quiet?: boolean;
+  path: string;
+}) => {
+  const result = await listFiles({ path });
+  const keysToDelete: string[] = result.Contents?.map((obj) => {
+    return obj.Key!;
+  }) as string[];
+
+  return await deleteFiles({ urls: keysToDelete, Quiet });
 };

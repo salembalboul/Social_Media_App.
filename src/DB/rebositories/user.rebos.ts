@@ -1,5 +1,5 @@
 import { HydratedDocument, Model } from "mongoose";
-import UserModel, { IUser } from "../model/user.model.js";
+import UserModel,{ IUser } from "../model/user.model.js";
 import DbRebository from "./db.rebos.js";
 import { appError } from "../../utils/classError.js";
 
@@ -7,7 +7,7 @@ import { appError } from "../../utils/classError.js";
 
 export class UserRebository extends DbRebository<IUser>{
     constructor(protected readonly model:Model<IUser>){
-        super(UserModel)
+        super(model)
     }
 
     async createOne(data:Partial<IUser>):Promise <HydratedDocument<IUser> | HydratedDocument<IUser>[] >{

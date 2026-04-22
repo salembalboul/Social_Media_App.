@@ -7,3 +7,4 @@ export class appError extends Error {
         this.statusCode = statusCode;
     }
 }
+//# sourceMappingURL=classError.js.map
