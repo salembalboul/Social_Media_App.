@@ -128,10 +128,10 @@ GET /dashBoard
 PATCH /updateRole/:userId
 ```
 
-Security Features
+## Security Features
 - JWT-based authentication
 - Role-based authorization
 - Password hashing using bcrypt
-Rate limiting and security headers
-Input validation using Zod
-Secure file upload handling
+- Rate limiting and security headers
+- Input validation using Zod
+- Secure file upload handling
